@@ -38,6 +38,18 @@ except FileNotFoundError:
     modelo = None
     print("Aviso: Modelo não encontrado. Verifique o diretório 'models/'.")
 
+
+def converter_categoricas(dados_dict):
+    genero_map = {'M': 1, 'F': 2}
+    plataforma_map = {'Instagram': 1, 'TikTok': 2, 'ambos': 3}
+    interacao_map = {'baixo': 0, 'medio': 1, 'alto': 2}
+
+    dados_dict['genero'] = genero_map.get(dados_dict['genero'], -1)
+    dados_dict['uso_plataforma'] = plataforma_map.get(dados_dict['uso_plataforma'], -1)
+    dados_dict['nivel_interacao_social'] = interacao_map.get(dados_dict['nivel_interacao_social'], -1)
+
+    return dados_dict
+
 @app.get("/")
 def home():
     return {"mensagem": "API de Predição online! Acesse /docs para ver a documentação."}
