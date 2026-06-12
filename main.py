@@ -57,6 +57,7 @@ def home():
 @app.post("/predict")
 def fazer_predicao(dados: TeenHealthData):
     dados_dict = dados.model_dump()
+    dados_dict = converter_categoricas(dados_dict)
     df_entrada = pd.DataFrame([dados_dict])
         
     try:
