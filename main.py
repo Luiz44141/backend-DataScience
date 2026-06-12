@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from datetime import datetime
 import joblib
 import pandas as pd
+
 
 app = FastAPI(
     title="API - Predição de Saúde Mental (Adolescentes)",
@@ -38,6 +40,7 @@ except FileNotFoundError:
     modelo = None
     print("Aviso: Modelo não encontrado. Verifique o diretório 'models/'.")
 
+historico_predicoes = []
 
 def converter_categoricas(dados_dict):
     genero_map = {'M': 1, 'F': 2}
@@ -54,7 +57,7 @@ def converter_categoricas(dados_dict):
 def home():
     return {"mensagem": "API de Predição online! Acesse /docs para ver a documentação."}
 
-@app.post("/predict")
+@app.post("/prever")
 def fazer_predicao(dados: TeenHealthData):
     dados_dict = dados.model_dump()
     dados_dict = converter_categoricas(dados_dict)
@@ -62,11 +65,26 @@ def fazer_predicao(dados: TeenHealthData):
         
     try:
         resultado = modelo.predict(df_entrada)
+        predicao = int(resultado[0])
+
+        historico_predicoes.append({
+            "id": len(historico_predicoes) + 1,
+            "data_hora": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "dados_entrada": dados_dict,
+            "predicao_ansiedade_alta": predicao
+        })
         
         return {
             "status": "sucesso",
-            "predicao_ansiedade_alta": int(resultado[0]),
+            "predicao_ansiedade_alta": predicao,
             "dados_recebidos": dados_dict
         }
     except Exception as e:
         return {"status": "erro", "detalhe": str(e)}
+    
+@app.get("/predicoes")
+def consultar_predicoes():
+    return {
+        "total": len(historico_predicoes),
+        "predicoes": historico_predicoes
+    }
